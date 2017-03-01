@@ -2,15 +2,9 @@ package com.massivecraft.factions.cmd;
 
 import com.massivecraft.factions.Factions;
 import com.massivecraft.factions.Perm;
-import com.massivecraft.factions.cmd.type.TypeFaction;
-import com.massivecraft.factions.cmd.type.TypeMPlayer;
 import com.massivecraft.factions.entity.MPlayer;
-import com.massivecraft.factions.entity.Faction;
-import com.massivecraft.massivecore.MassiveException;
-import com.massivecraft.massivecore.command.Parameter;
+import com.massivecraft.massivecore.Named;
 import com.massivecraft.massivecore.command.requirement.RequirementHasPerm;
-import com.massivecraft.massivecore.command.type.primitive.TypeDouble;
-import com.massivecraft.massivecore.command.type.primitive.TypeString;
 
 public class CmdFactionsPowerBoost extends FactionsCommand
 {
@@ -18,8 +12,8 @@ public class CmdFactionsPowerBoost extends FactionsCommand
 	// FIELDS
 	// -------------------------------------------- //
 	
-	private Parameter<MPlayer> parameterMplayer = new Parameter<MPlayer>(TypeMPlayer.get(), "name");
-	private Parameter<Faction> parameterFaction = new Parameter<Faction>(TypeFaction.get(), "name");
+	public CmdFactionsPowerBoostPlayer cmdFactionsPowerBoostPlayer = new CmdFactionsPowerBoostPlayer();
+	public CmdFactionsPowerBoostFaction cmdFactionsPowerBoostFaction = new CmdFactionsPowerBoostFaction();
 	
 	// -------------------------------------------- //
 	// CONSTRUCT
@@ -29,59 +23,27 @@ public class CmdFactionsPowerBoost extends FactionsCommand
 	{
 		// Aliases
 		this.addAliases("powerboost");
-
-		// Parameters
-		this.addParameter(TypeString.get(), "p|f|player|faction");
-		this.addParameter(parameterMplayer);
-		this.addParameter(TypeDouble.get(), "#");
+		
+		// Child
+		this.addChild(this.cmdFactionsPowerBoostPlayer);
+		this.addChild(this.cmdFactionsPowerBoostFaction);
 
 		// Requirements
 		this.addRequirements(RequirementHasPerm.get(Perm.POWERBOOST));
 	}
 
 	// -------------------------------------------- //
-	// OVERRIDE
+	// INFORM
 	// -------------------------------------------- //
 	
-	@Override
-	public void perform() throws MassiveException
+	public static void informPowerBoost(String target, Named named, double power, MPlayer sender)
 	{
-		String type = this.<String>readArg().toLowerCase();
-		boolean doPlayer = true;
-		if (type.equals("f") || type.equals("faction"))
-		{
-			doPlayer = false;
-		}
-		else if (!type.equals("p") && !type.equals("player"))
-		{
-			msg("<b>You must specify \"p\" or \"player\" to target a player or \"f\" or \"faction\" to target a faction.");
-			msg("<b>ex. /f powerboost p SomePlayer 0.5  -or-  /f powerboost f SomeFaction -5");
-			return;
-		}
+		// Prepare
+		target += " \"" + named.getName() + "\"";
+		String description = power > 0D ? "bonus" : "penalty";
 		
-		double targetPower = this.readArgAt(2);
-
-		String target;
-
-		if (doPlayer)
-		{
-			this.getParameters().set(1, parameterMplayer);
-			MPlayer targetPlayer = this.readArgAt(1);
-			
-			targetPlayer.setPowerBoost(targetPower);
-			target = "Player \""+targetPlayer.getName()+"\"";
-		}
-		else
-		{
-			this.getParameters().set(1, parameterFaction);
-			Faction targetFaction = this.readArgAt(1);
-			
-			targetFaction.setPowerBoost(targetPower);
-			target = "Faction \""+targetFaction.getName()+"\"";
-		}
-
-		msg("<i>"+target+" now has a power bonus/penalty of "+targetPower+" to min and max power levels.");
-		Factions.get().log(msender.getName()+" has set the power bonus/penalty for "+target+" to "+targetPower+".");
+		sender.msg("<i>%s now has a power %s of %.2f to min and max power levels.", target, description, power);
+		Factions.get().log(String.format("%s has set the power %s for %s to %.2f.", sender.getName(), description, target, power));
 	}
 	
 }
