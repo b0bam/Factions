@@ -1,29 +1,17 @@
 package com.massivecraft.factions.chat;
 
-public abstract class ChatTagAbstract implements ChatTag
+import java.util.Map;
+
+import com.massivecraft.massivecore.collections.MassiveMap;
+
+public abstract class ChatTagAbstract extends ChatActive implements ChatTag
 {
 	// -------------------------------------------- //
-	// FIELDS & RAWDATA GET/SET
+	// TAG REGISTER
 	// -------------------------------------------- //
 	
-	private final String id;
-	@Override public String getId() { return this.id; }
-
-	// -------------------------------------------- //
-	// OVERRIDES
-	// -------------------------------------------- //
-
-	@Override
-	public boolean register()
-	{
-		return ChatFormatter.registerTag(this);
-	}
-	
-	@Override
-	public boolean unregister()
-	{
-		return ChatFormatter.unregisterTag(this);
-	}
+	private final static Map<String, ChatTag> idToTag = new MassiveMap<>();
+	public static ChatTag getTag(String tagId) { return idToTag.get(tagId); }
 	
 	// -------------------------------------------- //
 	// CONSTRUCT
@@ -31,7 +19,32 @@ public abstract class ChatTagAbstract implements ChatTag
 	
 	public ChatTagAbstract(final String id)
 	{
-		this.id = id.toLowerCase();
+		super(id);
+	}
+	
+	// -------------------------------------------- //
+	// OVERRIDES
+	// -------------------------------------------- //
+	
+	@Override
+	public boolean register()
+	{
+		this.setActive(true);
+		return this.isActive();
+	}
+	
+	@Override
+	public boolean unregister()
+	{
+		this.setActive(false);
+		return !this.isActive();
+	}
+	
+	@Override
+	@SuppressWarnings("unchecked")
+	protected <T> Map<String, T> getAll()
+	{
+		return (Map<String, T>) idToTag;
 	}
 	
 }

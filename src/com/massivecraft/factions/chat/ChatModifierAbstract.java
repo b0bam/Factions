@@ -1,29 +1,17 @@
 package com.massivecraft.factions.chat;
 
-public abstract class ChatModifierAbstract implements ChatModifier
+import java.util.Map;
+
+import com.massivecraft.massivecore.collections.MassiveMap;
+
+public abstract class ChatModifierAbstract extends ChatActive implements ChatModifier
 {
 	// -------------------------------------------- //
-	// FIELDS & RAWDATA GET/SET
+	// MODIFIER REGISTER
 	// -------------------------------------------- //
 	
-	private final String id;
-	@Override public String getId() { return this.id; }
-
-	// -------------------------------------------- //
-	// OVERRIDES
-	// -------------------------------------------- //
-
-	@Override
-	public boolean register()
-	{
-		return ChatFormatter.registerModifier(this);
-	}
-	
-	@Override
-	public boolean unregister()
-	{
-		return ChatFormatter.unregisterModifier(this);
-	}
+	private final static Map<String, ChatModifier> idToModifier = new MassiveMap<>();
+	public static ChatModifier getModifier(String modifierId) { return idToModifier.get(modifierId); }
 	
 	// -------------------------------------------- //
 	// CONSTRUCT
@@ -31,7 +19,32 @@ public abstract class ChatModifierAbstract implements ChatModifier
 	
 	public ChatModifierAbstract(final String id)
 	{
-		this.id = id.toLowerCase();
+		super(id);
+	}
+	
+	// -------------------------------------------- //
+	// OVERRIDES
+	// -------------------------------------------- //
+	
+	@Override
+	public boolean register()
+	{
+		this.setActive(true);
+		return this.isActive();
+	}
+	
+	@Override
+	public boolean unregister()
+	{
+		this.setActive(false);
+		return !this.isActive();
+	}
+	
+	@Override
+	@SuppressWarnings("unchecked")
+	protected <T> Map<String, T> getAll()
+	{
+		return (Map<String, T>) idToModifier;
 	}
 	
 }
